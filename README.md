@@ -1,1 +1,79 @@
-# LSTM_Trading_ETFs_V3
+# Repository Overview
+
+### note : some of the comments in the code files may be out of date 
+
+## Hardware 
+ - Google Cloud Platform (GCP) - Notebooks run on c4d CPUS (96 - 384 vCPUs)
+
+## File Exploration Order
+## The recommended exploration sequence follows the machine learning pipeline:
+1. **Data Ingestion + Transformations V3.ipynb** - Data preparation  
+2. **PARALLEL_GS - 8 FOLDS.ipynb** - Initial grid search execution
+3. **Post GS Dist GC Runs.ipynb** - Distribution discovery runs using top models from GS
+4. **(1) Initial Dist Analytics** files - Analysis of distribution discovery results - looking for pattens and consistent characteristics in the Test set when compared to the Validation set
+5. **(2) Model Selection** files - Model selection based on group characteristics (all models are considered)
+6. **(3) Sev+TH Loss Model Selection** files - Model selection based on group characteristics - Best performing models with severity and threshold custom loss function ONLY *these models perform best*
+7. **(2) and (3) Model Selection and Algorithm Computations PARALLEL.ipynb** - Parallelized versions of (2) and (3) for faster execution on GCP these files contain the correct parameters for number of realizations to run. 
+8. **(4) All Models Model Performance Assessment** files - Clean consolidated analysis - distributions of the results over multiple realizations
+
+
+- ***NOTE*** The most interesting results are in the (4) All Models Model Performance Assessment at the end of the file, where distributions of the results over multiple realizations are presented. 
+**The low recall, after threshold selective adjustment, ensembled models, with custom loss severity, are the most interesting and consistent models.** 
+
+## Naming Conventions
+- **HOD/UCO**: Refers to specific ETF tickers (ProShares Ultra DJ-UBS Crude Oil / ProShares Ultra Bloomberg Crude Oil)
+- **Date Ranges (21_01 - 22_12)**: Indicates validation set period (January 2021 to December 2022)
+- **Test Set**: Assumed to be the following year after validation period (e.g., 2023 for 21_01-22_12 validation)
+- **Sev Loss**: Refers to severity-weighted loss functions that penalize certain prediction errors more heavily
+
+## Python Utility Files
+
+### Equations_Run_Combo_V_2.py
+- **Purpose**: Core LSTM model implementation and training functions. Contains the main machine learning pipeline including model architecture, custom loss functions, cross-validation logic, and evaluation metrics.
+- **Used in**: PARALLEL_GS - 8 FOLDS.ipynb and Post GS Dist GC Runs.ipynb for model training and prediction.
+
+### Functions_Model_Processing.py
+- **Purpose**: Specialized functions for model output processing, ensemble methods, and binary classification evaluation. Handles post-training analysis and prediction aggregation.
+- **Used in**: Model Selection notebooks (2), (3) series for processing and analyzing trained model outputs and ensemble predictions.
+
+### Functions_1_Initial_GS_and_Dist_Analytics_HOD.py
+- **Purpose**: Statistical analysis and visualization functions for initial grid search and model distribution results. Includes severity classification, bracket analysis, and distribution plotting utilities.
+- **Used in**: (1) Initial Distribution Analytics notebooks
+
+### Functions_Analytic_1_Initial_GS_and_Dist_Analytics_HOD.py
+- **Purpose**: Additional analytical functions for organizing and processing distribution discovery results.
+- **Used in**: (1) Initial Distribution Analytics
+
+### Functions_4_All_Models_Model_Performance.py
+- **Purpose**: Comprehensive visualization and analysis tools for model performance evaluation. Includes functions for plotting distributions of all 6 key metrics across multiple realizations and models.
+- **Used in**: (4) All Models Performance Assessment notebooks for creating performance visualizations and statistical summaries across model variants.
+
+## Jupyter Notebook Files
+
+### Data Ingestion + Transformations V3.ipynb
+- **Purpose**: Data acquisition and preprocessing pipeline. Ingests oil price data, ETF data, and economic indicators from public APIs and creates lagged features for LSTM input. The notebook prepares and caches processed datasets to avoid repeated calls when running on Google Cloud.
+
+### PARALLEL_GS - 8 FOLDS.ipynb
+- **Purpose**: Executes comprehensive grid search - 8 folds, 3 prediction per fold on a rolling basis. 
+
+### Post GS Dist GC Runs.ipynb
+- **Purpose**: Focuses on distribution discovery by running top-performing configurations with different random seeds to ensure robustness and identify consistent high performers. This is a more robust evaluation of the best models identified in the grid search phase, since the gradient descent can be sensitive to initialization. Here we get a stroger sense of the landcape of the loss function. 
+
+### (1) Initial Dist Analytics Files
+- **Purpose**: Analyzes the distribution discovery results generated by Post GS Dist GC Runs to identify trends in the V set that generalize to the T set. 
+
+### (2) Model Selection Files
+- **Purpose**: Model selection based on group characteristics. Groups are chosen manually, this will change in future iterations to automated, when possible with the right amoount of compute.
+
+### (3) Sev+TH Loss Models - Model Selection Files
+- **Purpose**: Model selection based on group characteristics - models with severity and threshold custom loss weighting function ONLY *these models perform best after thresholding*. 
+
+### (4) Model Performance Assessment Files
+- **Purpose**: Asses how the algorithm performs across all models and multiple realizations. This is the cleanest and most consolidated analysis of model performance.
+
+## Data Output Structure
+- **Model Performance Data folders**: Store serialized results from model training and evaluation
+- **Sev Loss folders**: Contain results from severity-weighted loss function experiments
+- **lagged_cache.pkl / short_dfs.pkl**: Cached processed datasets to improve pipeline efficiency
+
+
